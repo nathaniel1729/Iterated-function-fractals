@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+
 # In[1]:
 
 
@@ -22,23 +23,23 @@ pass
 # 
 # rendering status bar
 # 
-# save animations and images as image files, &/| with data (C,window, view map, f, maybe other stuff. Represent as string?)
+# save animations and images as image files, &/| with data (C,windo_w, view map, f, maybe other stuff. Represent as string?)
 # 
 # cancel button in case you accidentally start rendering something ridiculously large
 # 
-# Constants user control (maxmag, etc), sliders (res, etc), show on screen(C, window, etc).
+# Constants user control (maxmag, etc), sliders (res, etc), show on screen(C, windo_w, etc).
 # 
 # user can change function to be iterated and how to see attractors
 # 
 # user can change colormaps
 # 
-# replace console interaction with status updates in the window
+# replace console interaction with status updates in the windo_w
 # 
 # maybe warning before rendering highest resolution stuff? 
 # 
 # improve interface
 # 
-# more flexible window/image stuff
+# more flexible windo_w/image stuff
 # 
 # poster
 # 
@@ -59,9 +60,12 @@ try:
     import math,time
     import numpy as np
     from PIL import Image, ImageTk
-    #set up window and a few constants
+    #set up windo_w and a few constants
     import tkinter as tk
     from tkinter import messagebox, simpledialog,ttk
+    from colors import set_colormap, get_color
+    import function_math
+    from function_math import set_function_Magnitude,Newton
 except:
     print("imports failed")
     raise
@@ -101,427 +105,31 @@ def Render(M,img,label,savedata = False, draw = True, pixelsize=None):
     Create an image from matrix. If savedata is True, it will save the image to a file and return the file name. 
     If draw is true, it will put the image on the canvas.
     """
-    print('start render')
-    #print(M)
-    #data=''
-    #data2=[]
-    #data3=np.array([[[]]])
     global res,img314
     if pixelsize==None:
         pixelsize=res
-    t1=time.time()
-    #cols, rows=M.shape[:2]
-    #firstround=True
-    
-    nlines=len(M)
-    print(nlines)
-    notify=int(nlines**.5)
-    n=0
-    print('calculating')
-    tstart=time.time()#
     height, width=M.shape[0]*pixelsize,M.shape[1]*pixelsize
     data3=np.zeros((height,width,3),dtype=np.uint8)
     line3 = np.zeros((width,3),dtype=np.uint8)
     for n_y, row in enumerate(M):
-        if n%notify==0:
-            print(round(n/nlines,3),'t =',round(time.time()-tstart,3),'s')
-        n+=1
-        #line='{'
-        #line2=[]
         for n_x,val in enumerate(row):
-            #line=line + (' ' + get_color(val))*res
-            ##markColor(6*matrix[x][y][0]/100))*res#attractor_color(matrix[x][y]))*res#
-            #rgb=[int(np.random.random()*256**3),int(np.random.random()*256**3),int(np.random.random()*256**3)]
             color=get_color(val)
             rgb=[int('0x'+color[1:3],16),int('0x'+color[3:5],16),int('0x'+color[5:7],16)]
-            #line2.extend([rgb]*pixelsize)
             line3[n_x*pixelsize:(n_x+1)*pixelsize,:]=np.array(rgb, dtype=np.uint8)
         data3[n_y*pixelsize:(n_y+1)*pixelsize,:,:]=line3
-        
-        #data=data+(line+'} ')*res
-        
-        
-        #data2.extend([line2]*pixelsize)
-        # if firstround:
-        #     firstround=False
-        #     data3=np.array([line2], dtype=np.uint8)
-        #     print(data3)
-        # np.append(data3,np.array([line2], dtype=np.uint8),0)
-    
-    print(data3.dtype)
-    t2=time.time()
-    print('time to convert matrix:',round(t2-t1,3))
-    #data_array=np.array(data2, dtype=np.uint8)#no idea why this works. The dtype is apparantly super important. 
-    t3=time.time()
-    print('image array created','t =',round(t3-t2,3),'s')
-    #print(data_array)
-    #img.put(data, to=(0, 0))
-    img314 =  ImageTk.PhotoImage(image=Image.fromarray(data3))#data_array))#
-    t4=time.time()
-    print('image created','t =',round(t4-t3,3),'s')
-    print('end render')
+    img314 =  ImageTk.PhotoImage(image=Image.fromarray(data3))
     return img314
 
-    ## print(img314)
-    ## print(Image.fromarray(data_array,mode='RGB').getbands())
-    # if savedata:
-    #     return img314
-    #     #filename=save(img314,savedata)
-    #     #return(filename)
-    # if draw:
-    #     return img314
-    #     #show_img(img314)
-    #     #label["image"] = img
-    #     #global label_id, canvas
-    #     #canvas.itemconfigure(label_id, image=img)
-        
-        
 
 
-# In[4]:
 
 
-# set up the color system for the images
-def brightness(x):
-    """takes 0<=x<=6, returns a two-digit hex number based on the pattern
-          1****2****3
-         *           *
-        *             *
-       *               *
-      *                 *
-     0                   4****5****6
-    """
-    if 0<x<1:
-        num=int(255*x)
-    elif 1<=x<=3:
-        return('ff')
-    elif 3<x<4:
-        num=int(255*(4-x))
-    else:
-        return('00')
-    num = hex(num)[2:]
-    #print(num)
-    return('0'*(2-len(num))+num)
-
-def num_to_color(rgb):
-    """Converts an rgb tuple to a hex color"""
-    color='#'
-    for c in rgb:
-        c = hex(c)[2:]
-        c='0'*(2-len(c))+c
-        color=color+c
-    return color
-    
-
-phi=(math.sqrt(5)+1)/2
-def attractor_color(x):
-    """x is an integer or None. Returns a uniqe color, black if None"""
-    global phi
-    if x==None:
-        return('#000000')
-    return(markColor(1+phi*x))
-
-def markColor(x,brightness=brightness):
-    """Takes x and a function. Uses the function on r,g,b to create a cycle of hex colors, x%6 picks a color"""
-    #if x==0:
-    #    return('#000000')
-    cycle=x%6
-    red=brightness((cycle+2)%6)
-    green=brightness(cycle)
-    blue=brightness((cycle-2))
-    hue='#'+red+green+blue
-    return(hue)
-
-def color_ring(color0,bx,by,n):
-    """given 3 vectors (lists) in R^3 and integer n, creates the hex color cycle of n colors: color0 + bx*cos(t) + by*sin(t), 0<=t<2*pi,
-    replacing any colors that give errors with a different color."""
-    l=[]
-    t=0
-    dt=2*math.pi/n
-    for i in range(n):
-        new=[color0[i]+ math.cos(t)*bx[i]+math.sin(t)*by[i] for i in range(3)]
-        l.append(list(new))
-        t=t+dt
-    for i in range(len(l)):
-        for j in range(3):
-            l[i][j]=int(max(0,min(255,l[i][j])))
-    result=[num_to_color(color) for color in l]
-    return result
-def color_ball(color0,bx,by,bz,n,k):
-    """given 4 vectors (lists) in R^3 and integers n,k, creates the hex color cycle of n colors consisting of k rings whose
-    axes revolve around bz.
-    replacing any colors that give errors with a different color."""
-    breakup=[n//k+int(i<n%k) for i in range(k)]
-    if sum(breakup)!=n:
-        for i in range(100):
-            print('color ball function is faulty')
-        return
-    result=[]
-    t=0
-    dt=2*math.pi/k
-    for n_i in breakup:
-        b_new=[math.cos(t)*bx[i]+math.sin(t)*by[i] for i in range(3)for i in range(3)]
-        result.extend(color_ring(color0,bz,b_new,n_i))
-        t+=dt
-
-        
-    return result
-        
-def highbrightness(n):
-    """creates a list of n hex colors in a cycle, bright eastery theme."""
-    l=[]
-    for i in range(n):
-        x=(3*i/n+1/2)%3
-        r=int(((-abs(x-1)+2*abs(x-2)-1+x)/2)*255)
-        g=int((-(abs(x-1)+abs(x-2)-3)/2)*255)
-        b=int(((-abs(2-x)+2*abs(1-x)+2-x)/2)*255)
-        l.append(num_to_color((r,g,b)))
-    return l
-def lowbrightness(n):
-    """creates a list of n hex colors in a cycle, bright eastery theme."""
-    l=[]
-    for i in range(n):
-        x=(3*i/n+1/2+3/2)%3
-        r=255-int(((-abs(x-1)+2*abs(x-2)-1+x)/2)*255)
-        g=255-int((-(abs(x-1)+abs(x-2)-3)/2)*255)
-        b=255-int(((-abs(2-x)+2*abs(1-x)+2-x)/2)*255)
-        l.append(num_to_color((r,g,b)))
-    return l
-def standard_colors(n):
-    return [markColor(i*6/n) for i in range(n)]
-#print(highbrightness(30))
-Newton=False#change f when you change this
-def set_colormap():
-    """creates a colormap using the attractors and the point at infinity"""
-    lines=[]##insert at indices 1,2 for newton
-    if Newton:
-        return [highbrightness(100),lowbrightness(100),color_ring([127,127,127],[128,-64,-64],[0,111,-111],100),standard_colors(100)]#color_ball([192,64,64],[96,-96,0],[48,48,-96],[96,96,96],300,3)]#
-    else:
-        return [highbrightness(100),standard_colors(100)]
-def get_color(mag):
-    """takes a list [count,i] and chooses a color cycle corresponding to attractor 'i' and a color 
-    within that cycle based on 'count'"""
-    
-    if mag[0]==-1:
-        return '#000000'
-    global colormap
-    if mag[1]==-1 or len(colormap)==1:
-        line=colormap[-1]
-    else:
-        line=colormap[mag[1]%(len(colormap)-1)]
-    #print(mag,len(line),mag[0]%len(line))
-    return line[int(mag[0]%len(line))]
-    
-
-    
-
-
-# In[5]:
-
-
-#set up some complex functions and numbers
-
-def inv(c):
-    """Safe division, return 1/c unless c is 0, then returns 0."""
-    if abs(c)==0:
-        return c
-    return 1/c
-
-def rootcircle(n, initial = complex(1,0)):
-    """creates a circle of n evenly spaced complex numbers starting with inital."""
-    roots = [initial]
-    angle = 2*math.pi/n
-    rotate = complex(math.cos(angle),math.sin(angle))
-    for i in range(n-1):
-        roots.append(roots[-1]*rotate)
-    return(roots)
-
-#set centers to be the 3rd roots of unity
-centers = rootcircle(3)
-
-def P(C,roots = centers):
-    """Creates the polynomial consisting of the product of (x-x0) for x0 in roots,
-    evaluates this polynomial at the complex nubmer C"""
-    p= complex(1,0)
-    for root in roots:
-        p = p*(C-root)
-    return(p)
-
-def dP(C,roots = centers):
-    
-    """Creates the derivative of the polynomial consisting of the product of (x-x0) for x0 in roots,
-    evaluates this derivative at the complex nubmer C"""
-    dp = complex(0,0)
-    for i in range(len(roots)):
-        dp = dp+(P(C,roots[:i]+roots[i+1:]))
-    return(dp)
-        
-
-def P_dP(C,roots):
-    """Creates the polynomial consisting of the product of (x-x0) for x0 in roots,
-    returns a step calculated using newtons method (-P'(C)/P(C)). Will return 0 where P' is 0.
-    """
-    p_dp = -P(C,roots)*inv(dP(C,roots))
-    return(p_dp)
-
-
-e=complex(math.exp(1),0)
-def exp(x):
-    return e**x
-
-######################################################################################################################
-############################## most important function in the program right here #####################################
-######################################################################################################################
-
-def f(Z,C=0,roots=centers):#.285,.01)):#,C2 = complex(-3.0789856785439538, 0.2719380912620699)
-    """the function to be iterated. Usually z^2+c, this gives the mandelbrot set. z+P_dP is newtons method."""
-    global centers
-    return(Z**2+C)#(Z+P_dP(Z,attractors))#or Z,roots#((Z-(Z**2))*C)#(Z**4-Z**2+C)#
-#(Z**3+Z**2+C)#
-#(e**Z+C)#
-#    k=3/2*(2+C1+C2);#(Z**3/(6*k)+k*Z/2+(C1+C2)/2)
-#((Z**2/(np.sqrt(Z.real**2+Z.imag**2)))*1.1+C)
-
-
-C= complex(-0.11712655777245454, 0.6495111247984681)+complex(.080,.12)#weird spot under 3 bulb
-Z=complex(0,0)
-# #calculate attractors using C
-# for i in range(5000):
-#     Z=f(Z,C)
-#     if abs(Z)>5:
-#         break#commented out for newton stuff,but I don't think I need it anyway...
-if abs(Z)<=5 and not Newton:#:#and False added for newton stuff#
-    attractors=[Z]#+complex(.01,0)]
-else:
-    attractors=[complex(1),complex(-1),0]##for newton, insert at indices 0,1
-
-colormap=set_colormap()
-
-
-def Attractor(Z,C,roots,count=100):
-    """
-    given Z,C, and a list of roots, calculates which (if any) of the roots is nearly (within .1)
-    reached after 100 iterations of f_C at Z, returns the index of the root or None.
-    """
-    while count>0:
-        Z=f(Z,C,roots)
-        count-=1
-    for center in roots:
-        if abs(Z-center)<.1:
-            return(roots.index(center))
-    return
-
-r_escape=max([abs(x) for x in attractors]+[1])+4+(40000-4)*int(Newton)#was 4, changed for newton stuff to 40000
-r_trap=.005
-def attractor(Z):
-    """
-    given Z, uses the global variable attractors as a list of roots, calculates which (if any) 
-    of the roots is nearly (within r_trap) reached after 100 iterations of f_C at Z, returns the 
-    index of the root or -1 if Z escapes to infinity.
-    """
-    global attractors,r_escape,r_trap
-    if abs(Z)>r_escape:
-        return -1
-    for i,center in enumerate(attractors):
-        if abs(Z-center)<r_trap:
-            return(i)
-    return
-
-
-def set_attractors(C,maxmag=5000,newton=False):
-    """Finds Z after maxmag iterations of f_C, if |Z|<5, assumes that Z is an attractor and 
-    adds it to the global variable attractors"""
-    global attractors
-    if newton:
-        attractors=[complex(1)-C/2,complex(-1)-C/2,C]
-        return
-    Z=complex(0,0)
-    for i in range(maxmag):
-        Z=f(Z,C)
-        if abs(Z)>5:
-            return
-    attractors=[Z]#+complex(.01,0)]#[]#
-set_attractors(C,15,newton=True)
-def set_function_Magnitude(find_attractor=False):
-    """creates and returns one of two functions, depending on find_attractor"""
-    if find_attractor==True:
-        def Magnitude(Z,C,maxcount = 100):
-            """Counts how many iterations of f_C are needed for Z to escape or reach an attractor. 
-            Returns both the number of steps taken (-1 if it didn't find an attractor or escape)
-            and which attractor (which index of the global variable attractors, or -1 if it escapes, or None.)
-            """
-            #C = Z
-            #Z=complex(0,0)
-            count = 0
-            set_attractors(C,15)
-            while count<maxcount and attractor(Z)==None:
-                Z=f(Z,C)
-                count+=1
-            if count == maxcount: return [-1,1]
-            return([count,attractor(Z)])
-        return Magnitude
-    elif find_attractor=='J only':
-        def Magnitude(Z,C,maxcount = 100):
-            """Counts how many iterations of f_C are needed for Z to escape or reach an attractor. 
-            Returns both the number of steps taken (-1 if it didn't find an attractor or escape)
-            and which attractor (which index of the global variable attractors, or -1 if it escapes, or None.)
-            """
-            #C = Z
-            #Z=complex(0,0)
-            count = 0
-            #set_attractors(C,1500)
-            if Newton:
-                set_attractors(C,15,newton=True)#for newton only!
-            while count<maxcount and attractor(Z)==None:
-                Z=f(Z,C)
-                count+=1
-            if count == maxcount: 
-                return [-1,-1]
-            return([count,attractor(Z)])
-        return Magnitude
-    elif find_attractor=='test_fill':
-        def Magnitude(Z,C,maxcount = 100):
-            """Counts how many iterations of f_C are needed for Z to escape or reach an attractor. 
-            Returns both the number of steps taken (-1 if it didn't find an attractor or escape)
-            and which attractor (which index of the global variable attractors, or -1 if it escapes, or None.)
-            """
-            return [0,472]
-            # #C = Z
-            # #Z=complex(0,0)
-            # count = 0
-            # #set_attractors(C,1500)
-            # if Newton:
-            #     set_attractors(C,15,newton=True)#for newton only!
-            # while count<maxcount and attractor(Z)==None:
-            #     Z=f(Z,C)
-            #     count+=1
-            # if count == maxcount: 
-            #     return [-1,-1]
-            # return([count,attractor(Z)])
-        return Magnitude
-    else:
-        def Magnitude(Z,C,maxcount = 100):
-            """Counts how many iterations of f_C are needed for Z to escape or reach an attractor. 
-            Returns both the number of steps taken (-1 if it didn't find an attractor or escape)
-            and which attractor (which index of the global variable attractors, or -1 if it escapes, or None.)
-            """
-            #C = Z
-            #Z=complex(0,0)
-            count = 0
-            #set_attractors(C,1500)
-            while count<maxcount and abs(Z)<10:
-                try:
-                    Z=f(Z,C)
-                except:
-                    break
-                count+=1
-            if count == maxcount: return [-1,-1]
-            else: return [count,-1]
-        return Magnitude
 if Newton:
     Magnitude=set_function_Magnitude('J only')## use with newton and some other stuff
 else:
     Magnitude=set_function_Magnitude()#'test_fill'
+    
+colormap=set_colormap()
 
 
 # In[6]:
@@ -531,13 +139,13 @@ else:
 #as well as representing complex numbers on the canvas
 
 def unwindow(C,W):
-    """For C within the window defined by a center and upper right corner, maps C to be within [0,1]x[0,1]"""
+    """For C within the windo_w defined by a center and upper right corner, maps C to be within [0,1]x[0,1]"""
     DD=W[1]-W[0]
     CD=C-W[0]+DD
     return complex(CD.real/(2*DD.real),CD.imag/(2*DD.imag))
 
 def window(C,W):
-    """For C within [0,1]x[0,1], maps C to be within the window defined by a center and upper right corner."""
+    """For C within [0,1]x[0,1], maps C to be within the windo_w defined by a center and upper right corner."""
     DD=W[1]-W[0]
     return W[0]-DD+complex(C.real*DD.real*2,C.imag*DD.imag*2)
 
@@ -562,11 +170,6 @@ def inv_view_C_lin(C,Window):
     point = unwindow(C,Window)
     return point#Attractor(complex(0,0),C,[C]+centers[1:])#
 
-# def view_C_log(point,Q,Window):
-#     lnScale=math.log(abs(Window[1]-Window[0]))-0.3465735902799727
-#     lnC = window(point,[complex(lnScale-math.pi,math.pi),complex(lnScale,2*math.pi)])
-#     C=Window[0]+math.exp(lnC.real)*complex(math.cos(lnC.imag),math.sin(lnC.imag))
-#     return [complex(0,0),C]#Attractor(complex(0,0),C,[C]+centers[1:])#
 
 def view_J_lin(point,Q,Window):
     C = window(point,Window)
@@ -578,14 +181,6 @@ def inv_view_J_lin(C,Window):
     point = unwindow(C,Window)
     return point#Attractor(complex(0,0),C,[C]+centers[1:])#
 
-# def view_J_log(point,Q,Window):
-#     lnScale=math.log(abs(Window[1]-Window[0]))-0.3465735902799727
-#     lnC = window(point,[complex(lnScale-math.pi,math.pi),complex(lnScale,2*math.pi)])
-#     C=Window[0]+math.exp(lnC.real)*complex(math.cos(lnC.imag),math.sin(lnC.imag))
-#     if point.imag>.8 and point.real>.8:
-#         return([complex(0,0),window(5*point-complex(4,4), [Q,Q+stepsize*complex(2,2)])])
-#     else:
-#         return([C,Q])#Attractor(C,Q,[Q]+centers[1:])#
 
 #######
 def complex_log(x):
@@ -599,7 +194,7 @@ def complex_log(x):
 
 def view_C_log_2(point,Q,Window):
     lnC = window(point,Window)
-    C=windows['C_lin'][0]+exp(lnC)
+    C=windows['C_lin'][0]+np.exp(lnC)
     return [complex(0,0),C]#Attractor(complex(0,0),C,[C]+centers[1:])#
 def inv_view_C_log_2(C,Window):
     lnC = complex_log(C-windows['C_lin'][0])
@@ -608,8 +203,7 @@ def inv_view_C_log_2(C,Window):
 
 def view_J_log_2(point,Q,Window):
     lnC = window(point,Window)
-    C=windows['J_lin'][0]+exp(lnC)
-    #print(windows['J_lin'])
+    C=windows['J_lin'][0]+np.exp(lnC)
     if point.imag>.8 and point.real>.8:
         return([complex(0,0),window(5*point-complex(4,4), [Q,Q+stepsize*complex(2,2)])])
     else:
@@ -624,7 +218,7 @@ inv_view_map=inv_view_C_lin
 
 maxmag = 1500
 def set_view_domain(shape,Q,Window):
-    """creates a list of lists of Z,C, maxmag triples. Global Window controls the region shown. 
+    """creates a list of lists of Z,C, maxmag triples. Global Windo_w controls the region shown. 
     shape controls the number of rows and columns, Q is either a Z or C value depending on view_map. 
     currently, seed space view maps contain a small legend of the parameter space (C) in the 
     upper right corner, it's zoom level is determined by stepsize
@@ -632,7 +226,7 @@ def set_view_domain(shape,Q,Window):
     print('start set_view_domain')
     global view_map,maxmag
     print(view_map)
-    ##choose a map. Each map should be a function from [0,1]x[0,1] to CxC (depending on Q and Window).
+    ##choose a map. Each map should be a function from [0,1]x[0,1] to CxC (depending on Q and Windo_w).
     
     
     nlines=shape[0]
@@ -737,7 +331,6 @@ def prepare_frames():
             shape=(math.ceil((int(Xm)-int(xm))/res),math.ceil((int(Ym)-int(ym))/res))
             view=set_view_domain(shape,C,Window)
             zoom_in()
-            print('Window:',Window)
             frames.append(view)
             
             
@@ -754,62 +347,17 @@ def prepare_frames():
 
 # a bunch of variables and obsolete stuff, mostly.
 
-square,xm,Xm,ym,Ym=res,-364,364,-363,363
-#unwindow_og = lambda C: unwindow(C,[(complex(xm,ym)+complex(Xm,Ym))/2,complex(Xm,Ym)])#
+xm,Xm,ym,Ym=-364,364,-363,363
 
-
-
-########all the windows between here and the line of # are LL and UR corners, instead of center and UR corner##########
-#C = complex((-1.2545086026025125 -1.2545085781339527)/2, (-0.38184660232426615-0.381846577855703)/2)#3-lightning->seahorse valley
-#some good Z windows for viewing the above:
-#Window=[complex(-1.254510943011526-.01, -0.3818442136529039-.01), complex(-1.254510943011526+.01 , -0.3818442136529039+.01)]
-#Window = [complex(-0.0006404037772671987, -0.0006404037772671987), complex(0.0006404037772671987, 0.0006404037772671987)]
-#Window = [complex(-2.1936950640377943e-06, -2.1936950640377943e-06), complex(2.1936950640377943e-06, 2.1936950640377943e-06)]
-#Window = [complex(-0.0016796160000000027, -0.0016796160000000027), complex(0.0016796160000000027, 0.0016796160000000027)]
-#1.862645149230957e-09#?????
-
-#[complex(0.3604215953428633, -0.6413087582998904), complex(0.36042159534287416, -0.6413087582998795)]#Foot fractal (C window?)
-################################################################################################################
-
-
-#C = complex(0.3600112403769836 , -0.6412401127733343)#first finite partial x chain
-#C = complex(-1.942401867089655,0)#point on antenna
-#C = complex(0.3601577313902783 , -0.6413692730296517)#lots of multilevel detail, the first zoom sequence I made
-
-#C = complex((-1.2597225553541898 -1.2512524556688622)/2, (-0.3776091638102406-0.3860792634955672)/2)#3-lightning->main bulb leftish
-#C = complex(-0.04486189663259376 , 0.6511456779174767)# messy spirals, 3-bulb right valley
-#C = complex(0.28488922119140625 , 0.011072158813476562)# almost connected nautilus, very tightly wound together in center.
-#C = complex(0.28488922119140625 , 0.01107218861579895)#same as previous, but a little tighter
-#0.35860048046605797 + 0.6464082787564494 i# similar to video, but with seahorses instead of shells
-
-
-#I have pics already of J for both of these spots:
-#C: -0.06842892391218167 + -0.663010464304677j# nice fractal with triple spirals and shells, bottom 3 bulb left 11
-#C: -0.0682983692727371 + -0.6530916379390759 i# close to the above, but on the other side of the valley. 
-
-#[(-1.7496544421700426+6.931210349204815e-05j), (-1.7496544417812514+6.931249228319112e-05j)]#img4 4
-#C=(complex(0.3602404434376136+0.6413130610648023j)+complex(0.3602404434376152+0.6413130610648039j))/2#almost exactly the one from the video, this window is maximum zoom.
-#C=-0.15215242321248967+1.0329351579150852j#cool variant on the 5-5 thing 
-#C=0.06263749141789529+3.023722147812313j#super cool in newton
-#C=0.5326542403833178+0.555620466144246j#close to Ben Beckstrom fractal
-
-#0.5326542505796272+0.5556204832914241j#Ben Beckstrom fractal. good window:[(0.5326542505796272+0.5556204832914241j), (0.5326543571932145+0.5556205899050114j)]
-
-#[(-1.7573291273522558+0.012074115417193047j), (-1.7573290987941184+0.012074143975330458j)]#needs way more than 1500 iterations. do later.
-#0.30073456857702113+0.02007580577294269j#threads and shells
-#-.7644+0j#good center for looking at whole mandelbrot set
-#[(-0.06842892391218167 -0.663010464304677j), (-0.06842892391218167 -0.663010464304677j+.1+.1j)]#[C,C+complex(4,4)*stepsize]#
-#[(-0.15405122541900643+1.036884037073183j), (-0.15405114560289007+1.0368841168892995j)]#3 lightning, 3 valley, bubbles (but with cool color gradients)
-#[(-1.7644680509835375+0j), (-1.7374781222771942+0.026989928706343314j)]#medalion
 
 
 C=-1.7644680509835375+0j
 Window = [(-1.7644680509835375+0j), (-1.7374781222771942+0.026989928706343314j)]
 stepsize = (Window[1]-Window[0]).real/4
-ZWindow = [complex(0,0),complex(1.3,1.3)]#Window.copy()
+ZWindow = [complex(0,0),complex(1.3,1.3)]
 scalefactor = .6
 windows={}
-windows['C_lin']=Window.copy()#[(-1.7573291273522558+0.012074115417193047j), (-1.7573290987941184+0.012074143975330458j)]#
+windows['C_lin']=Window.copy()
 windows['J_lin']= [complex(0,0),complex(1.3,1.3)]#
 windows['C_log']=[complex(-math.pi,math.pi),complex(-math.pi,math.pi)+complex(1,1)*2*math.pi]
 windows['J_log']=[complex(-math.pi,math.pi),complex(-math.pi,math.pi)+complex(1,1)*2*math.pi]
@@ -825,7 +373,6 @@ inv_view_maps['C_log']=inv_view_C_log_2
 inv_view_maps['J_log']=inv_view_J_log_2
 
 
-# In[9]:
 
 
 #defining the machinery that allows images and zoom sequences to be created and saved. needs a lot of work.
@@ -840,20 +387,11 @@ def save(img,key_name):
     the name is determined by global filenumber, which it increments, and the current value of C. 
     Reports to the console.
     """
-    #global img314
-    #img314.put(data, to=(0, 0))
-    #print(tk.Image)
-    #help(img)
-    #help(tk.Image.__init__)
-    #help(img314)
     
     global filenumber
     print('filenumber:',filenumber)
-    filename = key_name[:-4]+' '+str(filenumber)+'.png'#'('+str(C.real)+'+'+str(C.imag)+'i).txt'
+    filename = key_name[:-4]+' '+str(filenumber)+'.png'
     filenumber+=1
-    # f = open(filename,'w')
-    # f.write(data)
-    # f.close()
     img314._PhotoImage__photo.write(filename)
     
     print(filename,'this was a save')
@@ -929,7 +467,6 @@ def display_next():
     if go:
         Step()
         root.after(200,display_next)
-        #print("going")
     else:
         print('stop1')
 
@@ -949,7 +486,6 @@ def get_sequence():
     sequence_key=sequence_names[i+1]
     key = open(sequence_key)
     sequence = key.readlines()
-    #print(sequence)
     sequence = [line.strip() for line in sequence]
     key.close()
     return(sequence)
@@ -966,9 +502,6 @@ def display_sequence():
     sequence_data = []
     for filename in sequence:
         sequence_data.append(tk.PhotoImage(file=filename))
-        # f = open(filename)
-        # sequence_data.append(f.read())
-        # f.close()
     go = True
     display_next()
     btn_display["text"] ="Stop"
@@ -978,13 +511,11 @@ def Step_back():
     global display_num,img, label, sequence_data
     display_num = (display_num-1)%len(sequence_data)
     img = sequence_data[display_num]
-    #img.put(data, to=(0, 0))
     show_img(img)
 def Step():
     global display_num,img, label, sequence_data
     display_num = (display_num+1)%len(sequence_data)
     img = sequence_data[display_num]
-    #img.put(data, to=(0, 0))
     show_img(img)
     
 
@@ -1014,14 +545,8 @@ def Run():
     print('C:',C.real,'+',C.imag,'i')
     print('stepsize:',stepsize)
     print('res:',res)
-    print('Window:',Window)
     print()
     return
-    #global go
-    #go = True
-    #regular_step()
-    #btnRun["text"] ="Stop"
-    #btnRun["command"] =Stop
 
 ######
 def res_up():
@@ -1112,18 +637,10 @@ def save_image():
         img=Render(M,img,label,pixelsize=res_size[0])
         save(img,filename)
     
-    # shape=(math.ceil((int(Xm)-int(xm))/res),math.ceil((int(Ym)-int(ym))/res))
-    # view=set_view_domain(shape,C,Window)
-    # M=fill(view)
-    
-    #     global stepsize,C
-    #     C = complex(2*random.random()-1,2*random.random()-1)
-    #     update_window()
-    #     return
 ######
 centered_zoom=False
 def zoom_point(point,inout=1):
-    """zoom the window in if inout=1, out if its -1, centered around window(point)"""
+    """zoom the windo_w in if inout=1, out if its -1, centered around windo_w(point)"""
     global Window,scalefactor,centered_zoom
     
     s = scalefactor**inout
@@ -1182,7 +699,6 @@ def switch_M():
     return
 def update_window():
     global view_map_name
-    print('update_window')
     global C, stepsize, Window
     if view_map_name=='C_lin':
         print("parameter space")
@@ -1245,7 +761,7 @@ def switch_linear():
 view_map_name='C_lin'
 def update_view_map(old,new):
     global view_map,Window,inv_view_map,view_map_name
-    #choose a map. Each map should be a function from [0,1]x[0,1] to CxC (depending on Q and Window).
+    #choose a map. Each map should be a function from [0,1]x[0,1] to CxC (depending on Q and Windo+w).
     view_map=view_maps[new]
     inv_view_map=inv_view_maps[new]
     windows[old]=Window.copy()
@@ -1285,8 +801,6 @@ def change_variables():
 
 def on_closing():
     root.destroy()
-    #if messagebox.askokcancel("Quit", "Do you want to quit?"):
-#help(messagebox)
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
 
@@ -1450,8 +964,6 @@ def update_dots(n):
             for i in range(len(all_tips['number']),n):
                 all_tips['number'].append(make_dot_label(root,str(i)))
 
-#   cx=w.winfo_pointerx() - w.winfo_rootx()
-#   cy=w.winfo_pointery() - w.winfo_rooty()
 def where(posn):                       
     """positions the trailing dots of whichever type are active"""
     global root,all_tips,Window,dot_range
@@ -1491,7 +1003,6 @@ def where(posn):
         return
     zi,c0=view_map(decanvasify(cx,cy),C,Window)
         
-    #print(inv_view_map(zi,Window)-c0)
     
     exploded=False
     #print('where',dot_range)
@@ -1505,7 +1016,7 @@ def where(posn):
             tip.place(x=cx+shiftxy[0], y=cy+shiftxy[1])
         if exploded==False:
             try:
-                zi=f(zi,c0)
+                zi=function_math.f(zi,c0)
                 if i+1>=dot_range[0] and (i+1-dot_range[0])%dot_range[2]==0:
                     #print('ok',i)
                     cx,cy=canvasify(inv_view_map(zi,Window))
@@ -1527,25 +1038,17 @@ root.bind("<Motion>",where)        #track mouse movement
 def make_dot_canvas(root,f_click=changetip):
     """create a new trailing circle"""
     tip_rad=5
-    tipC=tk.Canvas(root,width=tip_rad*2,height=tip_rad*2,highlightthickness=0)#,bg="green")
-    #print(tipC)
+    tipC=tk.Canvas(root,width=tip_rad*2,height=tip_rad*2,highlightthickness=0)
     tipL=tk.Canvas.create_oval(tipC,tip_rad/2,tip_rad/2,tip_rad/2*3,tip_rad/2*3, width=0, fill="blue")
-    #help(tk.Canvas.create_oval)
-    #print('l',tipL)
     tipC.bind("<1>",lambda a, clickType='circle': f_click(a,clickType))
-    #print(tipC)
     return tipC
 # Make a cursor tip using a label
 def make_dot_label(root,n,typeName='number',f_click=changetip):
     """create a new trailing number"""
     tip_size=1
-    tipL=tk.Label(root,width=tip_size, height=tip_size,text=n)#,bg="yellow")
-    #print('l',tipL)
+    tipL=tk.Label(root,width=tip_size, height=tip_size,text=n)
     tipL.bind("<1>",lambda a, clickType=typeName: f_click(a,clickType))
-    #print('l',tipL)
     return tipL
-#dot_range=[0,100,1]
-#def set_dots_range():
     
 dots_hide=[740,900]
 rest_spots={}
@@ -1566,16 +1069,13 @@ def spot_zoom(posn,clickType):
     """if the mouse is over the image, zoom in or out centered at the mouse. Otherwise, dismiss 
     or change the object following the mouse.
     """
-    #global Window,scalefactor
     
     cx=posn.x_root-root.winfo_x()
     cy=posn.y_root-root.winfo_y()
-    #print(cx)
     if cx>745:
         changetip(a,clickType)
         print(tipType)
         return
-    #print('this shouldn')
     if tipType=='zoom_in':
         s = 1
     elif tipType=='zoom_out':
@@ -1602,50 +1102,9 @@ changetip(0,'None')
 
     
     
-#dotlabel=tk.Label(root, image=img)
-#dotlabel.bind("<1>",changetip)
-##canvas = tk.Canvas(root, width=500, height=400, background='gray75')
-#canvas = tk.Canvas(dotlabel, width=500, height=400, background='gray75')
-#dotlabel_id=canvas.create_oval(dotlabel,tip_rad/2,tip_rad/2,tip_rad/2*3,tip_rad/2*3, width=0, fill="blue")
-##canvas.itemconfigure(dotlabel_id, image=img)
-
 #####################################
 
 
-#photo = PhotoImage(file='Alveoli.ppm')
-#canvas.create_image(0, 0, image=photo, anchor="nw")
-#oc = canvas.create_oval(0, 0, 400, 400, fill = 'red')
-
-
-#tipC.tkraise(True)
-#tipL.tkraise(True)
-
-
-# In[13]:
-
-
-def test_save_image(n):
-    global filenumber
-    t1=time.time()
-    M=[[[int((i+3*j)%1500),-1] for i in range(n)] for j in range(n)]
-    t2=time.time()
-    print('created original matrix', 't =',round(t2-t1,3),'s')
-    global img, label
-    img=Render(M,img,label,pixelsize=1)
-
-    t3=time.time()
-    print('created image', 't =',round(t3-t2,3),'s')
-    save(img,'test_save_image '+str(n)+' '+str(filenumber)+'.png')
-    filenumber+=1
-
-    t4=time.time()
-    print('saved image', 't =',round(t4-t3,3),'s')
-    print('\n\n')
-
-
-def Test_function():
-    for i in range(4):
-        test_save_image(750*2**i)
 
 
 # In[ ]:
@@ -1658,45 +1117,9 @@ def Test_function():
 
 
 #start everything running. Wheeeeeeeeeeee!!!!!!
-#print("you need to test and compare: removing the step of casting to an array")
-#1/0
 
 root.after(10,Run)
-#root.after(10,Test_function)
 tk.mainloop()
 
 
-# In[15]:
-
-
-#help(simpledialog)
-#help(messagebox.askokcancel)
-tk.TkVersion
-
-
-# In[16]:
-
-
-X=np.array([[1,2,3],[4,5,6]])
-Y=np.array([[5,6,7]])
-Z=np.array([[8],[9]])
-print(np.append(X,Z,1))
-
-print(maxmag)
-
-
-#You can use the color maps from matplotlib and apply them without any matplotlib figures etc. 
-#This will make things much faster:
-
-# import matplotlib.pyplot as plt
-
-# # Get the color map by name:
-# cm = plt.get_cmap('gist_rainbow')
-
-# # Apply the colormap like a function to any array:
-# colored_image = cm(image)
-
-# # Obtain a 4-channel image (R,G,B,A) in float [0, 1]
-# # But we want to convert to RGB in uint8 and save it:
-# Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8)).save('test.png')
 
