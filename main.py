@@ -4,7 +4,7 @@ import numpy as np
 import math
 import random
 
-res = 1
+res = 20
 width, height = 1200, 800
 ROW, COL = height // res, width // res
 range_x, range_y = (-2, 2), (-1.5, 1.5)
