@@ -54,14 +54,25 @@ e=complex(math.exp(1),0)
 def exp(x):
     return e**x
 
+
+#approximation of f^3_c(z) for the medalion.
+C_0=-1.7548776662466927
+a_z2=4*C_0**3+4*C_0**2
+a_8=1/a_z2**7
+a_6=(4*C_0)/a_z2**5
+a_4=(6*C_0**2+2*C_0)/a_z2**3
+a_2=1
+a_dc=(4*C_0**3+6*C_0**2+2*C_0+1)*a_z2#about 161. but we're going to cheat and not use it. Ha!
+
 ######################################################################################################################
 ############################## most important function in the program right here #####################################
 ######################################################################################################################
 
 def f(Z,C=0,roots=centers):#.285,.01)):#,C2 = complex(-3.0789856785439538, 0.2719380912620699)
     """the function to be iterated. Usually z^2+c, this gives the mandelbrot set. z+P_dP is newtons method."""
-    global centers
-    return(Z**2+C)#(Z+P_dP(Z,attractors))#or Z,roots#((Z-(Z**2))*C)#(Z**4-Z**2+C)#
+    #global centers
+    return(Z**2+C)#(a_8*Z**8+a_6*Z**6+a_4*Z**4+Z**2+C)#(1-Z**2/2+Z**4/24-Z**6/720+C)-(C/2)**(1/3)#(Z+P_dP(Z,attractors))#or Z,roots#((Z-(Z**2))*C)#(Z**4-Z**2+C)#
+
 #(Z**3+Z**2+C)#
 #(e**Z+C)#
 #    k=3/2*(2+C1+C2);#(Z**3/(6*k)+k*Z/2+(C1+C2)/2)
@@ -100,12 +111,12 @@ r_trap=.005
 def attractor(Z):
     """
     given Z, uses the global variable attractors as a list of roots, calculates which (if any) 
-    of the roots is nearly (within r_trap) reached after 100 iterations of f_C at Z, returns the 
+    of the roots is nearly (within r_trap) reached, returns the 
     index of the root or -1 if Z escapes to infinity.
     """
     global attractors,r_escape,r_trap
     if abs(Z)>r_escape:
-        return -1
+        return 0
     for i,center in enumerate(attractors):
         if abs(Z-center)<r_trap:
             return(i)
@@ -141,7 +152,7 @@ def set_function_Magnitude(find_attractor=False):
             while count<maxcount and attractor(Z)==None:
                 Z=f(Z,C)
                 count+=1
-            if count == maxcount: return [-1,1]
+            if count == maxcount: return [0,1]
             return([count,attractor(Z)])
         return Magnitude
     elif find_attractor=='J only':
@@ -160,7 +171,7 @@ def set_function_Magnitude(find_attractor=False):
                 Z=f(Z,C)
                 count+=1
             if count == maxcount: 
-                return [-1,-1]
+                return [0,-1]
             return([count,attractor(Z)])
         return Magnitude
     elif find_attractor=='test_fill':
@@ -184,6 +195,8 @@ def set_function_Magnitude(find_attractor=False):
             # return([count,attractor(Z)])
         return Magnitude
     else:
+        escape_radius=10#*100
+        half_escape=escape_radius**(2**1.5)
         def Magnitude(Z,C,maxcount = 100):
             """Counts how many iterations of f_C are needed for Z to escape or reach an attractor. 
             Returns both the number of steps taken (-1 if it didn't find an attractor or escape)
@@ -193,12 +206,12 @@ def set_function_Magnitude(find_attractor=False):
             #Z=complex(0,0)
             count = 0
             #set_attractors(C,1500)
-            while count<maxcount and abs(Z)<10:
+            while count<maxcount and abs(Z)<escape_radius:
                 try:
                     Z=f(Z,C)
                 except:
                     break
                 count+=1
-            if count == maxcount: return [-1,-1]
-            else: return [count,-1]
+            if count == maxcount: return [0,-1]
+            else: return [count,0]#[2*count+int(abs(Z)<half_escape),0]#
         return Magnitude

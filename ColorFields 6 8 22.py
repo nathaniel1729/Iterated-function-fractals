@@ -63,7 +63,7 @@ try:
     #set up windo_w and a few constants
     import tkinter as tk
     from tkinter import messagebox, simpledialog,ttk
-    from colors import set_colormap, get_color
+    from colors import colormap_np#, set_colormap, get_color
     import function_math
     from function_math import set_function_Magnitude,Newton
 except:
@@ -105,18 +105,14 @@ def Render(M,img,label,savedata = False, draw = True, pixelsize=None):
     Create an image from matrix. If savedata is True, it will save the image to a file and return the file name. 
     If draw is true, it will put the image on the canvas.
     """
-    global res,img314
+    global res,img314,colormap_np
     if pixelsize==None:
         pixelsize=res
-    height, width=M.shape[0]*pixelsize,M.shape[1]*pixelsize
-    data3=np.zeros((height,width,3),dtype=np.uint8)
-    line3 = np.zeros((width,3),dtype=np.uint8)
-    for n_y, row in enumerate(M):
-        for n_x,val in enumerate(row):
-            color=get_color(val)
-            rgb=[int('0x'+color[1:3],16),int('0x'+color[3:5],16),int('0x'+color[5:7],16)]
-            line3[n_x*pixelsize:(n_x+1)*pixelsize,:]=np.array(rgb, dtype=np.uint8)
-        data3[n_y*pixelsize:(n_y+1)*pixelsize,:,:]=line3
+    cmap_type='np'
+    if cmap_type=='np':    
+        M = M.repeat(pixelsize, axis = 0).repeat(pixelsize, axis = 1)
+        data3=colormap_np(M)
+    
     img314 =  ImageTk.PhotoImage(image=Image.fromarray(data3))
     return img314
 
@@ -129,7 +125,7 @@ if Newton:
 else:
     Magnitude=set_function_Magnitude()#'test_fill'
     
-colormap=set_colormap()
+#colormap=set_colormap()
 
 
 # In[6]:
@@ -351,8 +347,8 @@ xm,Xm,ym,Ym=-364,364,-363,363
 
 
 
-C=-1.7644680509835375+0j
-Window = [(-1.7644680509835375+0j), (-1.7374781222771942+0.026989928706343314j)]
+C=-1.884112847821245 + 0.007559240005834352j
+Window = [(-1.884112847821245 + 0.007559240005834352j), (-1.884112847821245 + 0.007559240005834352j+.00000000000025+.00000000000025j)]
 stepsize = (Window[1]-Window[0]).real/4
 ZWindow = [complex(0,0),complex(1.3,1.3)]
 scalefactor = .6
@@ -534,11 +530,13 @@ def Stop():
 
 # functions attached to buttons. 
 
+current_data=[]
 def Run():
     global img, label,C,current_image
     shape=(math.ceil((int(Xm)-int(xm))/res),math.ceil((int(Ym)-int(ym))/res))
     view=set_view_domain(shape,C,Window)
     M=fill(view)
+    current_data=M
     img314=Render(M,img,label)
     current_image=img314
     show_img(img314)
@@ -1078,12 +1076,15 @@ def spot_zoom(posn,clickType):
         return
     if tipType=='zoom_in':
         s = 1
+        trick=1
     elif tipType=='zoom_out':
         s = -1
+        trick=1#/(1-.6)
     else:
         return
     
     c0=decanvasify(cx,cy)
+    c0=(c0-.5-.5j)*trick+.5+.5j
     zoom_point(c0,s)
     return
     

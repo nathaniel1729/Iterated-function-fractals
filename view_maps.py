@@ -2,7 +2,6 @@
 
 
 
-
 #functions for creating images of regions of the complex plane
 
 def view_C_lin(point,Q,Window):
