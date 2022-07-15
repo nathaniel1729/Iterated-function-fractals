@@ -54,6 +54,14 @@ e=complex(math.exp(1),0)
 def exp(x):
     return e**x
 
+def complex_log(x):
+    try:
+        a=math.log(abs(x))
+    except:
+        print('log error,',x)
+        a=-100
+    b=math.atan2(x.imag,x.real)
+    return complex(a,b)
 
 #approximation of f^3_c(z) for the medalion.
 C_0=-1.7548776662466927
@@ -137,7 +145,7 @@ def set_attractors(C,maxmag=5000,newton=False):
             return
     attractors=[Z]#+complex(.01,0)]#[]#
 set_attractors(C,15,newton=True)
-def set_function_Magnitude(find_attractor=False):
+def set_function_Magnitude(find_attractor=False,f=f):
     """creates and returns one of two functions, depending on find_attractor"""
     if find_attractor==True:
         def Magnitude(Z,C,maxcount = 100):

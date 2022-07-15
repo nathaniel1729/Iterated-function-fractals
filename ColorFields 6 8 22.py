@@ -2,19 +2,9 @@
 # coding: utf-8
 
 
-# In[1]:
-
-
-pass
-
 
 # To do:
-# 
-# number tags: 
-#     #variable number, 
-#     #multiples of k (slice style?), 
-#     #shape (that transforms with function)? see cow
-#     
+#
 # gradual resolution update
 # 
 # efficient motion without zooming, 
@@ -37,22 +27,11 @@ pass
 # 
 # maybe warning before rendering highest resolution stuff? 
 # 
-# improve interface
-# 
-# more flexible windo_w/image stuff
-# 
-# poster
-# 
-# use numpy
-# 
 # support for higher precision complex numbers? 
 # 
 # see image/preimage of shapes under function, or n iterations (e.g. a cow)
 # 
 
-# THIS NOTEBOOK USES NUMPY! IT WON'T WORK IF YOU DOWNLOAD IT AS A .PY FILE!
-
-# In[2]:
 
 
 try:
@@ -66,14 +45,13 @@ try:
     from colors import colormap_np#, set_colormap, get_color
     import function_math
     from function_math import set_function_Magnitude,Newton
+    from Mandelbrot_class import Mandelbrot
+    from view_maps import *
 except:
     print("imports failed")
     raise
 
 root = tk.Tk()
-res = 16
-row = 726//res
-col = 726//res
 
 try:
     namefile = open("_sequence_names.txt",'r')
@@ -93,363 +71,17 @@ except:
 
 # In[3]:
 
+George=Mandelbrot()
 
 # set up the image and Render function
-img = tk.PhotoImage(width=col*res, height=row*res)
-img314 = tk.PhotoImage(width=col*res, height=row*res)
-current_image=img
+
+screen_img = tk.PhotoImage(width=1, height=1)
+starting=True
 def show_img(img):
-    label["image"] = img
-def Render(M,img,label,savedata = False, draw = True, pixelsize=None):
-    """
-    Create an image from matrix. If savedata is True, it will save the image to a file and return the file name. 
-    If draw is true, it will put the image on the canvas.
-    """
-    global res,img314,colormap_np
-    if pixelsize==None:
-        pixelsize=res
-    cmap_type='np'
-    if cmap_type=='np':    
-        M = M.repeat(pixelsize, axis = 0).repeat(pixelsize, axis = 1)
-        data3=colormap_np(M)
-    
-    img314 =  ImageTk.PhotoImage(image=Image.fromarray(data3))
-    return img314
+    global screen_img
+    screen_img=img
+    label["image"] = screen_img
 
-
-
-
-
-if Newton:
-    Magnitude=set_function_Magnitude('J only')## use with newton and some other stuff
-else:
-    Magnitude=set_function_Magnitude()#'test_fill'
-    
-#colormap=set_colormap()
-
-
-# In[6]:
-
-
-#some transformations that facilitate sampling complex numbers from a particular region 
-#as well as representing complex numbers on the canvas
-
-def unwindow(C,W):
-    """For C within the windo_w defined by a center and upper right corner, maps C to be within [0,1]x[0,1]"""
-    DD=W[1]-W[0]
-    CD=C-W[0]+DD
-    return complex(CD.real/(2*DD.real),CD.imag/(2*DD.imag))
-
-def window(C,W):
-    """For C within [0,1]x[0,1], maps C to be within the windo_w defined by a center and upper right corner."""
-    DD=W[1]-W[0]
-    return W[0]-DD+complex(C.real*DD.real*2,C.imag*DD.imag*2)
-
-def decanvasify(cx,cy):
-    """takes coordinates in the canvas, returns a complex number in [0,1]x[0,1]"""
-    #print((cx-7)/725,1-(cy-31)/723)
-    return complex((cx-11)/725,1-(cy-35)/723)
-def canvasify(Z):
-    """takes a complex number in [0,1]x[0,1], returns coordinates in the canvas"""
-    return int(Z.real*725+11),int((1-Z.imag)*723+35)
-
-
-# In[7]:
-
-
-#functions for creating images of regions of the complex plane
-
-def view_C_lin(point,Q,Window):
-    C = window(point,Window)
-    return [complex(0,0),C]#Attractor(complex(0,0),C,[C]+centers[1:])#
-def inv_view_C_lin(C,Window):
-    point = unwindow(C,Window)
-    return point#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-
-def view_J_lin(point,Q,Window):
-    C = window(point,Window)
-    if point.imag>.8 and point.real>.8 and False:
-        return([complex(0,0),window(5*point-complex(4,4), [Q,Q+stepsize*complex(2,2)])])
-    else:
-        return([C,Q])#Attractor(C,Q,[Q]+centers[1:])#
-def inv_view_J_lin(C,Window):
-    point = unwindow(C,Window)
-    return point#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-
-#######
-def complex_log(x):
-    try:
-        a=math.log(abs(x))
-    except:
-        print('log error,',x)
-        a=-100
-    b=math.atan2(x.imag,x.real)
-    return complex(a,b)
-
-def view_C_log_2(point,Q,Window):
-    lnC = window(point,Window)
-    C=windows['C_lin'][0]+np.exp(lnC)
-    return [complex(0,0),C]#Attractor(complex(0,0),C,[C]+centers[1:])#
-def inv_view_C_log_2(C,Window):
-    lnC = complex_log(C-windows['C_lin'][0])
-    point=unwindow(lnC,Window)
-    return point#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-def view_J_log_2(point,Q,Window):
-    lnC = window(point,Window)
-    C=windows['J_lin'][0]+np.exp(lnC)
-    if point.imag>.8 and point.real>.8:
-        return([complex(0,0),window(5*point-complex(4,4), [Q,Q+stepsize*complex(2,2)])])
-    else:
-        return([C,Q])#Attractor(C,Q,[Q]+centers[1:])#
-def inv_view_J_log_2(C,Window):
-    lnC = complex_log(C-windows['J_lin'][0])
-    point=unwindow(lnC,Window)
-    return point#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-view_map=view_C_lin
-inv_view_map=inv_view_C_lin
-
-maxmag = 1500
-def set_view_domain(shape,Q,Window):
-    """creates a list of lists of Z,C, maxmag triples. Global Windo_w controls the region shown. 
-    shape controls the number of rows and columns, Q is either a Z or C value depending on view_map. 
-    currently, seed space view maps contain a small legend of the parameter space (C) in the 
-    upper right corner, it's zoom level is determined by stepsize
-    """
-    print('start set_view_domain')
-    global view_map,maxmag
-    print(view_map)
-    ##choose a map. Each map should be a function from [0,1]x[0,1] to CxC (depending on Q and Windo_w).
-    
-    
-    nlines=shape[0]
-    print(nlines)
-    notify=int(nlines**.5)
-    n=0
-    print('calculating')
-    tstart=time.time()#
-    #
-    view_domain2=np.zeros(shape+(2,),dtype=complex)
-    iteration_limits=np.zeros(shape,dtype=int)
-    iteration_limits[:,:]=maxmag
-    line2=np.zeros((shape[1],2),dtype=complex)
-    #iter_line=np.zeros((shape[1],),dtype=int)
-    for x in range(shape[0]):
-        if n%notify==0:
-            print(round(n/nlines,3),'t =',round(time.time()-tstart,3),'s')
-        n+=1
-        for y in range(shape[1]):
-            point = complex(x/shape[0],1-y/shape[1])
-            item=view_map(point,Q,Window)
-            #item.extend([maxmag])
-            #iter_line[y]=maxmag
-            line2[y,:]=item#)#np.array(
-        view_domain2[x,:,:]=line2
-        #iteration_limits[x,:]=iter_line
-        
-    print(round(1,3),'t =',round(time.time()-tstart,3),'s')
-    
-    print('end set_view_domain')
-    return(view_domain2,iteration_limits)
-
-
-# pb = ttk.Progressbar(
-#         root,
-#         orient='horizontal',
-#         mode='indeterminate',
-#         length=180
-#     )
-# pb.grid(row=12,column=2,columnspan = 2)
-# pb.start()
-def fill(view_domain):
-    """gets the output of Magnitude at each point in view_domain, returns these as matrix."""
-    print('start fill')
-    view_domain, iteration_limits=view_domain
-    width,height =view_domain.shape[:2]
-    M=np.zeros((height,width,2),dtype=int)
-    nlines=width
-    print(nlines)
-    notify=int(nlines**.5)
-    n=0
-    print('calculating')
-    tstart=time.time()#
-    line = np.zeros((height,2),dtype=int)
-    for n_x,xline in enumerate(view_domain):
-        if n%notify==0:
-            print(round(n/nlines,3),'t =',round(time.time()-tstart,3),'s')
-        n+=1
-        for n_y,point in enumerate(xline):
-            mag=Magnitude(point[0],point[1],iteration_limits[n_x,n_y])
-            #print(mag)
-            line[n_y,:]=mag#,dtype=int)#np.array(
-        M[:,n_x,:]=line
-    print(round(1,3),'t =',round(time.time()-tstart,3),'s')
-    print(M.shape)
-    print('matrix array created')
-    print('end fill')
-    return(M)
-
-domain=[]
-r=-complex(0,(1.0577644392199486-0.6443213634110101)/2)
-center=-r+complex((-0.19807849916533377 -0.05216187123852948)/2, -(-0.7223148298516319 -0.5763982019248275)/2)
-
-nsteps=3
-angles=[math.pi*(1+math.sin((i/nsteps-1/2)*math.pi)) for i in range(nsteps)]
-
-for a in angles:
-    domain.append(center+r*complex(math.cos(a),math.sin(a)))
-    #print(domain[-1].real,domain[-1].imag)
-#for c in domain:
-#    print(c.real)
-def prepare_frames():
-    """creates a list of viewpoints, which can be rendered as a zoom sequence."""
-    global scalefactor, res, C, zooming,domain
-    zooming = True
-    frames=[]
-    minres = 8###############
-    lastres = res*2
-    while res != lastres and res>minres:
-        lastres = res
-        res_up()
-    
-    zoomtype='move'#'zoom'#
-    if zoomtype=='zoom':
-        scalefactor = .65#.9#####################
-        minscale = .2#2.0134609968696852e-07###############
-        try:
-            C+complex(0)
-        except:
-            C=complex(0)
-        while abs(Window[1]-Window[0])>(minscale/2**.5):
-            shape=(math.ceil((int(Xm)-int(xm))/res),math.ceil((int(Ym)-int(ym))/res))
-            view=set_view_domain(shape,C,Window)
-            zoom_in()
-            frames.append(view)
-            
-            
-    else:
-        for C_i in domain:
-            shape=(math.ceil((int(Xm)-int(xm))/res),math.ceil((int(Ym)-int(ym))/res))
-            view=set_view_domain(shape,C_i,Window)
-            frames.append(view)
-    return frames
-
-
-# In[8]:
-
-
-# a bunch of variables and obsolete stuff, mostly.
-
-xm,Xm,ym,Ym=-364,364,-363,363
-
-
-
-C=-1.884112847821245 + 0.007559240005834352j
-Window = [(-1.884112847821245 + 0.007559240005834352j), (-1.884112847821245 + 0.007559240005834352j+.00000000000025+.00000000000025j)]
-stepsize = (Window[1]-Window[0]).real/4
-ZWindow = [complex(0,0),complex(1.3,1.3)]
-scalefactor = .6
-windows={}
-windows['C_lin']=Window.copy()
-windows['J_lin']= [complex(0,0),complex(1.3,1.3)]#
-windows['C_log']=[complex(-math.pi,math.pi),complex(-math.pi,math.pi)+complex(1,1)*2*math.pi]
-windows['J_log']=[complex(-math.pi,math.pi),complex(-math.pi,math.pi)+complex(1,1)*2*math.pi]
-view_maps={}
-view_maps['C_lin']=view_C_lin
-view_maps['J_lin']=view_J_lin
-view_maps['C_log']=view_C_log_2
-view_maps['J_log']=view_J_log_2
-inv_view_maps={}
-inv_view_maps['C_lin']=inv_view_C_lin
-inv_view_maps['J_lin']=inv_view_J_lin
-inv_view_maps['C_log']=inv_view_C_log_2
-inv_view_maps['J_log']=inv_view_J_log_2
-
-
-
-
-#defining the machinery that allows images and zoom sequences to be created and saved. needs a lot of work.
-
-sequence = []
-zooming = False
-            
-
-filenumber = 0
-def save(img,key_name):
-    """Takes data as a string of hex codes, saves it as a text file. returns the name of the file.
-    the name is determined by global filenumber, which it increments, and the current value of C. 
-    Reports to the console.
-    """
-    
-    global filenumber
-    print('filenumber:',filenumber)
-    filename = key_name[:-4]+' '+str(filenumber)+'.png'
-    filenumber+=1
-    img314._PhotoImage__photo.write(filename)
-    
-    print(filename,'this was a save')
-    return(filename)
-def get_valid_name(item=['sequence','Sequence','.txt']):
-    """gets a filename that is not an empty string or the same as another file. 
-    Returns None if the user clicks cancel."""
-    sequence_key =simpledialog.askstring(''+item[1]+' Name','What would you like to name this '+item[0]+'?').strip()
-    if sequence_key==None:
-        return
-    while sequence_key=='':
-        sequence_key =simpledialog.askstring(
-            ''+item[1]+' Name',
-            'Sorry, that is not a valid name. What would you like to name this '+item[0]+'?'
-        ).strip()
-    sequence_key=sequence_key+item[2]
-    while sequence_key in sequence_names:
-        sequence_key =simpledialog.askstring(''+item[1]+' Name','Sorry, the name "'+sequence_key[:-4]+'" is taken. What would you like to name this '+item[0]+'?').strip()
-        if sequence_key==None:
-            return
-        while sequence_key=='':
-            sequence_key =simpledialog.askstring(
-                ''+item[1]+' Name',
-                'Sorry, that is not a valid name. What would you like to name this '+item[0]+'?'
-            ).strip()
-        sequence_key=sequence_key+item[2]
-    return sequence_key
-def zoom_sequence():
-    """creates a zoom sequence as a series of saved png files, with an index file that has their names. 
-    uses current global information to create the regions. Very slow for long or high resolution sequences.
-    """
-    global img, label, sequence, zooming, sequence_key
-    if not messagebox.askokcancel("Zoom Sequence", "Generating a zoom sequence may take a very long time. Do you want to continue?"):
-        return
-    sequence_key=get_valid_name()
-    if sequence_key==None: return
-    sequence_names.append(sequence_key)
-        
-        
-    zooming = True
-    frames=prepare_frames()
-    namelist = []
-    for view in frames:
-        M=fill(view)
-        filename=save(Render(M,img,label, savedata = sequence_key, draw = False),sequence_key)
-        namelist.append(filename)
-        print('filename:',filename)
-    sequence = namelist
-    key = open(sequence_key,'w')
-    for filename in sequence:
-        key.write(filename+'\n')
-    key.close()
-    names = open("_sequence_names.txt",'a')
-    names.write(sequence_key+'\n')
-    names.close()
-    zooming = False
-    print('zoom sequence ready')
-
-    
-
-
-# In[10]:
 
 
 #defining the machinery that allows images and zoom sequences to be recalled and displayed. needs a lot of work.
@@ -458,6 +90,8 @@ def zoom_sequence():
 display_num = 0
 sequence_data = []
 go = False
+
+sequence_key = 'sequence_1.txt'
 def display_next():
     global go
     if go:
@@ -466,10 +100,26 @@ def display_next():
     else:
         print('stop1')
 
-sequence_key = 'sequence_1.txt'
 def get_sequence():
     global sequence_key, sequence_data
     names_list=''
+    
+    try:
+        namefile = open("_sequence_names.txt",'r')
+        #print('line1')
+        names = namefile.readlines()
+        #print('line2')
+        sequence_names = ["_sequence_names.txt"]+[line.strip() for line in names]
+        #print('line3')
+        namefile.close()
+        #print('line4')
+    except:
+        #print('except')
+        namefile = open("_sequence_names.txt",'w')
+        namefile.close()
+        sequence_names = ["_sequence_names.txt"]
+
+
     print(sequence_names[1:])
     for i,name in enumerate(sequence_names[1:]):
         names_list = names_list+'\n'+str(i)+') '+name
@@ -486,7 +136,7 @@ def get_sequence():
     key.close()
     return(sequence)
 def display_sequence():
-    global img, label, sequence_data, go
+    global sequence_data, go
     sequence=get_sequence()
     if sequence==None:
         return
@@ -504,12 +154,12 @@ def display_sequence():
     btn_display["command"] =Stop
 
 def Step_back():
-    global display_num,img, label, sequence_data
+    global display_num, sequence_data
     display_num = (display_num-1)%len(sequence_data)
     img = sequence_data[display_num]
     show_img(img)
 def Step():
-    global display_num,img, label, sequence_data
+    global display_num, sequence_data
     display_num = (display_num+1)%len(sequence_data)
     img = sequence_data[display_num]
     show_img(img)
@@ -530,271 +180,146 @@ def Stop():
 
 # functions attached to buttons. 
 
-current_data=[]
+
 def Run():
-    global img, label,C,current_image
-    shape=(math.ceil((int(Xm)-int(xm))/res),math.ceil((int(Ym)-int(ym))/res))
-    view=set_view_domain(shape,C,Window)
-    M=fill(view)
-    current_data=M
-    img314=Render(M,img,label)
-    current_image=img314
-    show_img(img314)
-    print('C:',C.real,'+',C.imag,'i')
-    print('stepsize:',stepsize)
-    print('res:',res)
+    global George
+    George.Q=George.C
+    George.res_to_shape()
+    George.set_view_domain()
+    George.fill()
+    George.Render()
+    show_img(George.img)
+    print('C:',str(George.C.real),'+',str(George.C.imag)+'j')
+    print('stepsize:',George.stepsize)
+    print('res:',George.res)
     print()
     return
+######
 
 ######
-def res_up():
-    global res, row, col
-    if res%2==0:
-        res = res//2
-        row = row*2
-        col = col*2
-    return
 
 def res_down():
-    global res, row, col
-    if col%2==0 and row%2 == 0:
-        res = res*2
-        row = row//2
-        col = col//2
-    return
-######
+    global George
+    George.res_down()
+def res_up():
+    global George
+    George.res_up()
+
+
 def stepsize_down():
-    global stepsize
-    stepsize = stepsize/2
-    update_window()
-    return
-
+    global George
+    r=George.stepsize_down()
+    if r=='Run()':
+        Run()
 def stepsize_up():
-    global stepsize
-    stepsize = stepsize*2
-    update_window()
-    return
-######
+    global George
+    r=George.stepsize_up()
+    if r=='Run()':
+        Run()
+
+
 def C_r_down():
-    global stepsize,C
-    C-=stepsize
-    update_window()
-    return
-
+    global George
+    r=George.C_r_down()
+    if r=='Run()':
+        Run()
 def C_r_up():
-    global stepsize,C
-    C+=stepsize
-    update_window()
-    return
-######
+    global George
+    r=George.C_r_up()
+    if r=='Run()':
+        Run()
 def C_i_down():
-    global stepsize,C
-    C-=complex(0,stepsize)
-    update_window()
-    return
-
+    global George
+    r=George.C_i_down()
+    if r=='Run()':
+        Run()
 def C_i_up():
-    global stepsize,C
-    C+=complex(0,stepsize)
-    update_window()
-    return
-
-######
-
-def get_size_res():
-    """gets a size and resolution for the image to be saved."""
-    customize =messagebox.askyesno(
-        'Resolution and Size',
-        'Customize resolution and size? (Click No to use current resolution and size) '
-    )
-    if not customize:
-        return 'current'
-    resolution =simpledialog.askinteger(
-        'Resolution and Size',
-        'Resolution?'
-    )
-    
-    size =simpledialog.askinteger(
-        'Resolution and Size',
-        'Size?'
-    )
-    
-    return [resolution,size]
+    global George
+    r=George.C_i_up()
+    if r=='Run()':
+        Run()
 
 
 def save_image():
-    filename=get_valid_name(item=['image','Image','.png'])
-    res_size=get_size_res()
-    if res_size=='current':
-        save(current_image,filename)
-    else:
-        global img, C
-        shape=(math.ceil((res_size[1])/res_size[0]),math.ceil(res_size[1]/res_size[0]))
-        view=set_view_domain(shape,C,Window)
-        M=fill(view)
-        img=Render(M,img,label,pixelsize=res_size[0])
-        save(img,filename)
-    
-######
-centered_zoom=False
-def zoom_point(point,inout=1):
-    """zoom the windo_w in if inout=1, out if its -1, centered around windo_w(point)"""
-    global Window,scalefactor,centered_zoom
-    
-    s = scalefactor**inout
-    CC,UR=Window
-    mid=window(point,Window)
-    CC_new,UR_new=mid+s*(CC-mid),mid+s*(UR-mid)
-    if centered_zoom:
-        Window = [CC,UR_new]
-    else:
-        Window = [CC_new,UR_new]
-    update_constants()
-    return
-    
-def zoom_in(a=0):
-    centered_zoom=True
-    zoom_point(complex(.5,.5),1)
-    centered_zoom=False
-    return
+    global George
+    George.save_image()
 
-def zoom_out(a=0):
-    centered_zoom=True
-    zoom_point(complex(.5,.5),-1)
-    centered_zoom=False
-    return
-######
-def zoom_in_LR():
-    zoom_point(complex(1,0),1)
-    return
 
-def zoom_in_LL():
-    zoom_point(complex(0,0),1)
-    return
+def zoom_in():
+    global George
+    r=George.zoom_in()
+    if r=='Run()':
+        Run()
+def zoom_out():
+    global George
+    r=George.zoom_out()
+    if r=='Run()':
+        Run()
 
 def zoom_in_UR():
-    zoom_point(complex(1,1),1)
-    return
-
+    global George
+    r=George.zoom_in_UR()
+    if r=='Run()':
+        Run()
 def zoom_in_UL():
-    zoom_point(complex(0,1),1)
-    return
+    global George
+    r=George.zoom_in_UL()
+    if r=='Run()':
+        Run()
+def zoom_in_LR():
+    global George
+    r=George.zoom_in_LR()
+    if r=='Run()':
+        Run()
+def zoom_in_LL():
+    global George
+    r=George.zoom_in_LL()
+    if r=='Run()':
+        Run()
 
-######
+
 def switch_M():
-    global Window,ZWindow, C,res,view_map_name
-    
-    ZWindow = Window.copy()
-    
-    if view_map_name =='J_log':
-        update_view_map('J_log','C_log')
-    else:
-        update_view_map('J_lin','C_lin')
+    global George
+    George.switch_M()
     btn_switch_M["text"] ="switch_J"
     btn_switch_M["command"] =switch_J
-    res = max(4,res)
-    update_window()
-    return
-def update_window():
-    global view_map_name
-    global C, stepsize, Window
-    if view_map_name=='C_lin':
-        print("parameter space")
-        Window =[C,C+complex(4,4)*stepsize]
     Run()
-def update_constants():
-    global zooming
-    
-    global C, stepsize, Window
-    if view_map_name=='C_lin':
-        C = Window[0]
-        stepsize = abs(Window[1]-Window[0])/(4*2**.5)
-    if not zooming:
-        Run()
-        pass
-
 def switch_J():
-    global Window,ZWindow, C, res,view_map_name
-    res = max(4,res)
-    update_constants()
-    
-    if view_map_name=='C_log':
-        update_view_map('C_log','J_log')
-    else:
-        update_view_map('C_lin','J_lin')
-    Window = ZWindow.copy()
+    global George
+    George.switch_J()
     btn_switch_M["text"] ="switch_M"
     btn_switch_M["command"] =switch_M
-    
     Run()
-    return
-
 def switch_log():
-    global Window,ZWindow, C, res,view_map_name
-    res = max(4,res)
-    
-    if view_map_name[0]=='C':
-        update_view_map('C_lin','C_log')
-    else:
-        update_view_map('J_lin','J_log')
+    global George
+    George.switch_log()
     btn_switch_log["text"] ="linear"
     btn_switch_log["command"] =switch_linear
-    
     Run()
-    return
-
 def switch_linear():
-    global Window,ZWindow, C, res
-    res = max(4,res)
-    
-    if view_map_name[0]=='C':
-        update_view_map('C_log','C_lin')
-    else:
-        update_view_map('J_log','J_lin')
+    global George
+    George.switch_linear()
     btn_switch_log["text"] ="logarithmic"
     btn_switch_log["command"] =switch_log
-    
     Run()
-    return
-view_map_name='C_lin'
-def update_view_map(old,new):
-    global view_map,Window,inv_view_map,view_map_name
-    #choose a map. Each map should be a function from [0,1]x[0,1] to CxC (depending on Q and Windo+w).
-    view_map=view_maps[new]
-    inv_view_map=inv_view_maps[new]
-    windows[old]=Window.copy()
-    Window=windows[new].copy()
-    view_map_name=new
-            
 
-        
-        
-        
 
+def zoom_sequence():
+    global George
+    George.zoom_sequence()
+
+
+def set_dots_range():
+    global George
+    George.set_dots_range()
 def change_variables():
-    var_names={
-        0 :'Newton',
-        1 :'maxmag'
-    }
-    names_list=''
-    for i in var_names:
-        names_list = names_list+'\n'+str(i)+') '+var_names[i]
-    if names_list=='':
-        return
-    i=simpledialog.askinteger(
-                                'Change variables',
-                                'Which variable would you like to change? Enter a number.\n'+names_list
-                            )%(len(var_names))
-    new_val=float(simpledialog.askstring(
-                names_list[i],
-                'Enter a new value for '+var_names[i]+':'
-            ))
-    if var_names[i]=='Newton':
-        global Newton
-        Newton=bool(new_val)
-    if var_names[i]=='maxmag':
-        global maxmag
-        maxmag=int(new_val)
+    global George
+    George.change_variables()
+
+
+######
+######
+
     
 
 def on_closing():
@@ -893,7 +418,7 @@ btn_zoom_in_LL = tk.Button(root,text='zoom_in_LL',width=12,height=1, command=zoo
 btn_zoom_in_LL.grid(row=7,column=2)
 
 ######
-btn_switch_M = tk.Button(root,text='switch_M',width=12,height=1, command=switch_M)
+btn_switch_M = tk.Button(root,text='switch_J',width=12,height=1, command=switch_J)
 btn_switch_M.grid(row=8,column=2)
 
 
@@ -927,12 +452,12 @@ btn_change_variables.grid(row=10,column=2)
 
 # working out some kinks and creating the main image and trailing dots. And spot zooming.
 
-label=tk.Label(root, image=img)
+label=tk.Label(root, image=George.img)
 label.grid(row=0,column=1,rowspan = 120)
 #canvas = tk.Canvas(root, width=500, height=400, background='gray75')
 canvas = tk.Canvas(label, width=500, height=400, background='gray75')
-label_id=canvas.create_image(0, 0, image=img)#photo, anchor="nw")#Label(root, image=img)
-canvas.itemconfigure(label_id, image=img)
+label_id=canvas.create_image(0, 0, image=George.img)#photo, anchor="nw")#Label(root, image=img)
+canvas.itemconfigure(label_id, image=George.img)
 #####################################
 def changetip(a,clickType):            
     """activate or deactivate whatever was clicked"""
@@ -964,7 +489,7 @@ def update_dots(n):
 
 def where(posn):                       
     """positions the trailing dots of whichever type are active"""
-    global root,all_tips,Window,dot_range
+    global root,all_tips,George,dot_range
     #print('where',dot_range)
     
     cx=posn.x_root-root.winfo_x()
@@ -999,7 +524,7 @@ def where(posn):
         
     else:
         return
-    zi,c0=view_map(decanvasify(cx,cy),C,Window)
+    zi,c0=George.view_map(decanvasify(cx,cy),George.C,George.Window)
         
     
     exploded=False
@@ -1007,17 +532,17 @@ def where(posn):
     for i,tip in enumerate(dots_list):
         if i>=dot_range[1]:
             #print('too big',i)
-            break
+            tip.place(x=dots_hide[0]+shiftxy[0], y=dots_hide[1]+shiftxy[1])
         if cx>745:
             cx,cy=dots_hide
-        if i>=dot_range[0] and (i-dot_range[0])%dot_range[2]==0:
+        if True or i>=dot_range[0] and (i-dot_range[0])%dot_range[2]==0:
             tip.place(x=cx+shiftxy[0], y=cy+shiftxy[1])
         if exploded==False:
             try:
                 zi=function_math.f(zi,c0)
                 if i+1>=dot_range[0] and (i+1-dot_range[0])%dot_range[2]==0:
                     #print('ok',i)
-                    cx,cy=canvasify(inv_view_map(zi,Window))
+                    cx,cy=canvasify(George.inv_view_map(zi,George.Window))
                 else:
                     #print('too small or not divisible',i)
                     cx,cy=dots_hide
@@ -1067,7 +592,8 @@ def spot_zoom(posn,clickType):
     """if the mouse is over the image, zoom in or out centered at the mouse. Otherwise, dismiss 
     or change the object following the mouse.
     """
-    
+    global George
+    a=0
     cx=posn.x_root-root.winfo_x()
     cy=posn.y_root-root.winfo_y()
     if cx>745:
@@ -1085,7 +611,8 @@ def spot_zoom(posn,clickType):
     
     c0=decanvasify(cx,cy)
     c0=(c0-.5-.5j)*trick+.5+.5j
-    zoom_point(c0,s)
+    George.zoom_point(c0,s)
+    Run()
     return
     
     
@@ -1103,19 +630,6 @@ changetip(0,'None')
 
     
     
-#####################################
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[14]:
-
 
 #start everything running. Wheeeeeeeeeeee!!!!!!
 
