@@ -1,26 +1,21 @@
 
 
 
-from function_math import C
-
-
 try:
-    import random
-    import math,time
+    import math
     import numpy as np
     from PIL import Image, ImageTk
     #set up windo_w and a few constants
     import tkinter as tk
-    from tkinter import messagebox, simpledialog,ttk
+    from tkinter import messagebox, simpledialog
     from colors import colormap_np#, set_colormap, get_color
-    import function_math
-    from function_math import set_function_Magnitude,Newton, complex_log,exp
     from view_maps import *
+    import fractal
 except:
     print("imports failed")
     raise
 
-class Mandelbrot:
+class Camera:
     def __init__(self):
         self.res = 16
         self.ROW = 720
@@ -30,10 +25,6 @@ class Mandelbrot:
         self.img = tk.PhotoImage(width=self.COL, height=self.ROW)
         
 
-        if Newton:
-            self.Magnitude=set_function_Magnitude('J only')## use with newton and some other stuff
-        else:
-            self.Magnitude=set_function_Magnitude()#'test_fill'
 
 
         self.C=-0.2829083486891697 + -1.3532971029220109j
@@ -44,34 +35,6 @@ class Mandelbrot:
         self.scalefactor = .6
 
 
-    
-        self.view_maps={}
-        self.view_maps['C_lin']=self.view_C_lin
-        self.view_maps['J_lin']=self.view_J_lin
-        self.view_maps['C_log']=self.view_C_log_2
-        self.view_maps['J_log']=self.view_J_log_2
-
-        self.inv_view_maps={}
-        self.inv_view_maps['C_lin']=self.inv_view_C_lin
-        self.inv_view_maps['J_lin']=self.inv_view_J_lin
-        self.inv_view_maps['C_log']=self.inv_view_C_log_2
-        self.inv_view_maps['J_log']=self.inv_view_J_log_2
-
-        self.windows={}
-        self.windows['C_lin']=self.Window.copy()
-        self.windows['J_lin']= [complex(0,0),complex(1.3,1.3)]#
-        self.windows['C_log']=[complex(-math.pi,math.pi),complex(-math.pi,math.pi)+complex(1,1)*2*math.pi]
-        self.windows['J_log']=[complex(-math.pi,math.pi),complex(-math.pi,math.pi)+complex(1,1)*2*math.pi]
-        
-
-        self.view_map_name='C_lin'
-        self.view_map=self.view_maps[self.view_map_name]
-        self.inv_view_map=self.inv_view_maps[self.view_map_name]
-
-
-        
-        self.maxmag = 1500
-        self.Q=C
         self.res_to_shape()
         self.set_view_domain()
         self.pixelsize=None
@@ -81,12 +44,15 @@ class Mandelbrot:
         
         self.sequence = []
                     
+        self.fractal=fractal.Fractal(view_J_lin,inv_view_J_lin)
+        self.view_map_name='J_lin'
 
         self.filenumber = 0
         self.centered_zoom=False
         
         self.offset=0
         self.cyclelength=100
+        self.set_view_domain()
 
 
     def Render(self):
@@ -105,70 +71,6 @@ class Mandelbrot:
         self.img = img314
 
 
-    #functions for creating images of regions of the complex plane
-
-    def view_C_lin(self,point,Q,Window):
-        C = window(point,Window)
-        return [complex(0,0),C]#Attractor(complex(0,0),C,[C]+centers[1:])#
-    def inv_view_C_lin(self,C,Window):
-        point = unwindow(C,Window)
-        return point#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-    # def view_C_log(point,Q,Window):
-    #     lnScale=math.log(abs(Window[1]-Window[0]))-0.3465735902799727
-    #     lnC = window(point,[complex(lnScale-math.pi,math.pi),complex(lnScale,2*math.pi)])
-    #     C=Window[0]+math.exp(lnC.real)*complex(math.cos(lnC.imag),math.sin(lnC.imag))
-    #     return [complex(0,0),C]#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-    def view_J_lin(self,point,Q,Window):
-        C = window(point,Window)
-        if point.imag>.8 and point.real>.8 and False:
-            return([complex(0,0),window(5*point-complex(4,4), [Q,Q+stepsize*complex(2,2)])])
-        else:
-            return([C,Q])#Attractor(C,Q,[Q]+centers[1:])#
-    def inv_view_J_lin(self,C,Window):
-        point = unwindow(C,Window)
-        return point#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-    # def view_J_log(point,Q,Window):
-    #     lnScale=math.log(abs(Window[1]-Window[0]))-0.3465735902799727
-    #     lnC = window(point,[complex(lnScale-math.pi,math.pi),complex(lnScale,2*math.pi)])
-    #     C=Window[0]+math.exp(lnC.real)*complex(math.cos(lnC.imag),math.sin(lnC.imag))
-    #     if point.imag>.8 and point.real>.8:
-    #         return([complex(0,0),window(5*point-complex(4,4), [Q,Q+stepsize*complex(2,2)])])
-    #     else:
-    #         return([C,Q])#Attractor(C,Q,[Q]+centers[1:])#
-
-    #######
-
-    def view_C_log_2(self,point,Q,Window):
-        lnC = window(point,Window)
-        C=self.windows['C_lin'][0]+exp(lnC)
-        return [complex(0,0),C]#Attractor(complex(0,0),C,[C]+centers[1:])#
-    def inv_view_C_log_2(self,C,Window):
-        lnC = complex_log(C-self.windows['C_lin'][0])
-        point=unwindow(lnC,Window)
-        return point#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-    def view_J_log_2(self,point,Q,Window):
-        lnC = window(point,Window)
-        C=self.windows['J_lin'][0]+exp(lnC)
-        #print(windows['J_lin'])
-        if False:#point.imag>.8 and point.real>.8:##################################              legend
-            return([complex(0,0),window(5*point-complex(4,4), [Q,Q+stepsize*complex(2,2)])])
-        else:
-            return([C,Q])#Attractor(C,Q,[Q]+centers[1:])#
-    def inv_view_J_log_2(self,C,Window):
-        lnC = complex_log(C-self.windows['J_lin'][0])
-        point=unwindow(lnC,Window)
-        return point#Attractor(complex(0,0),C,[C]+centers[1:])#
-
-
-
-
-
-
-
 
     def res_to_shape(self):
         self.shape=(math.ceil(self.COL/self.res),math.ceil(self.ROW/self.res))
@@ -178,32 +80,39 @@ class Mandelbrot:
         shape controls the number of rows and columns, Q is either a Z or C value depending on view_map. 
         """
         
-        view_domain2=np.zeros(self.shape+(2,),dtype=complex)
-        iteration_limits=np.zeros(self.shape,dtype=int)
-        iteration_limits[:,:]=self.maxmag
-        line2=np.zeros((self.shape[1],2),dtype=complex)
-        for x in range(self.shape[0]):
-            for y in range(self.shape[1]):
-                point = complex(x/self.shape[0],1-y/self.shape[1])
-                item=self.view_map(point,self.Q,self.Window)
-                line2[y,:]=item
-            view_domain2[x,:,:]=line2
-        self.view_domain=(view_domain2,iteration_limits)
+        # view_domain2=np.zeros(self.shape+(2,),dtype=complex)
+        # iteration_limits=np.zeros(self.shape,dtype=int)
+        # iteration_limits[:,:]=self.maxmag
+        # line2=np.zeros((self.shape[1],2),dtype=complex)
+        # for x in range(self.shape[0]):
+        #     for y in range(self.shape[1]):
+        #         point = complex(x/self.shape[0],1-y/self.shape[1])
+        #         item=(window(point,self.Window),self.Q)
+        #         line2[y,:]=item
+        #     view_domain2[x,:,:]=line2
+        # self.view_domain=(view_domain2,iteration_limits)
+
+        rpart,ipart=np.linspace(0,1,self.shape[0],dtype=np.complex),np.linspace(1,0,self.shape[0],dtype=np.complex)
+        ipart, rpart= np.meshgrid(ipart,rpart)
+
+        self.view_domain=(window(rpart+1j*ipart,self.Window),self.C)
 
         
     def fill(self):
         """gets the output of Magnitude at each point in view_domain, returns these as matrix."""
-        view_domain, iteration_limits=self.view_domain
-        width,height =view_domain.shape[:2]
-        M=np.zeros((height,width,2),dtype=int)
-        line = np.zeros((height,2),dtype=int)
-        for n_x,xline in enumerate(view_domain):
-            for n_y,point in enumerate(xline):
-                mag=self.Magnitude(point[0],point[1],iteration_limits[n_x,n_y])
-                #print(mag)
-                line[n_y,:]=mag#,dtype=int)#np.array(
-            M[:,n_x,:]=line
-        self.Data=M
+        view_domain, parameter=self.view_domain
+        # width,height =view_domain.shape[:2]
+        # M=np.zeros((height,width,2),dtype=int)
+        # line = np.zeros((height,2),dtype=int)
+        # for n_x,xline in enumerate(view_domain):
+        #     for n_y,point in enumerate(xline):
+        #         mag=self.Magnitude(point,parameter)
+        #         #print(mag)
+        #         line[n_y,:]=mag#,dtype=int)#np.array(
+        #     M[:,n_x,:]=line
+        # self.Data=M
+
+        self.Data=self.fractal.Magnitude(self.fractal.view_map(view_domain,parameter))
 
             
     def prepare_frames(self):
@@ -477,67 +386,6 @@ class Mandelbrot:
     
 
         
-    def switch_M(self):
-
-        self.ZWindow = self.Window.copy()
-        
-        if self.view_map_name =='J_log':
-            self.update_view_map('J_log','C_log')
-        else:
-            self.update_view_map('J_lin','C_lin')
-        
-        print('btn_switch_M["text"] ="switch_J"')
-        print('btn_switch_M["command"] =switch_J')
-        self.res = max(4,self.res)
-        return self.update_window()
-        
-    def switch_J(self):
-        self.res = max(4,self.res)
-        self.zooming,q=True,self.zooming
-        self.update_constants()
-        self.zooming=q
-        
-        if self.view_map_name=='C_log':
-            self.update_view_map('C_log','J_log')
-        else:
-            self.update_view_map('C_lin','J_lin')
-        self.Window = self.ZWindow.copy()
-        #r='btn_switch_M["text"] ="switch_M"'+'\n'+'btn_switch_M["command"] =switch_M'+'\n'+'Run()'
-        return
-
-    def switch_log(self):
-        self.res = max(4,self.res)
-        
-        if self.view_map_name[0]=='C':
-            self.update_view_map('C_lin','C_log')
-        else:
-            self.update_view_map('J_lin','J_log')
-        #print('btn_switch_log["text"] ="linear"')
-        #print('btn_switch_log["command"] =switch_linear')
-        
-        #print('Run()')
-        return
-
-    def switch_linear(self):
-        self.res = max(4,self.res)
-        
-        if self.view_map_name[0]=='C':
-            self.update_view_map('C_log','C_lin')
-        else:
-            self.update_view_map('J_log','J_lin')
-        #print('btn_switch_log["text"] ="logarithmic"')
-        #print('btn_switch_log["command"] =switch_log')
-        
-        #print('Run()')
-        return
-    def update_view_map(self,old,new):
-        #choose a map. Each map should be a function from [0,1]x[0,1] to CxC (depending on Q and Windo+w).
-        self.view_map=self.view_maps[new]
-        self.inv_view_map=self.inv_view_maps[new]
-        self.windows[old]=self.Window.copy()
-        self.Window=self.windows[new].copy()
-        self.view_map_name=new
-
         
     def change_variables(self):
         var_names={

@@ -1,5 +1,6 @@
 
 import math
+import numpy as np
 Newton=False#change f when you change this
 # In[5]:
 
@@ -79,7 +80,10 @@ a_dc=(4*C_0**3+6*C_0**2+2*C_0+1)*a_z2#about 161. but we're going to cheat and no
 def f(Z,C=0,roots=centers):#.285,.01)):#,C2 = complex(-3.0789856785439538, 0.2719380912620699)
     """the function to be iterated. Usually z^2+c, this gives the mandelbrot set. z+P_dP is newtons method."""
     #global centers
-    return(Z**2+C)#(a_8*Z**8+a_6*Z**6+a_4*Z**4+Z**2+C)#(1-Z**2/2+Z**4/24-Z**6/720+C)-(C/2)**(1/3)#(Z+P_dP(Z,attractors))#or Z,roots#((Z-(Z**2))*C)#(Z**4-Z**2+C)#
+    Z=1/Z +0.739085
+    Z=(Z-(np.cos(Z)-Z)/(-np.sin(Z)-1))
+    return 1/(Z-0.739085)#(np.cos(Z)-Z)/(-np.sin(Z)))#(a_8*Z**8+a_6*Z**6+a_4*Z**4+Z**2+C)#(1-Z**2/2+Z**4/24-Z**6/720+C)-(C/2)**(1/3)#(Z+P_dP(Z,attractors))#or Z,roots#((Z-(Z**2))*C)#(Z**4-Z**2+C)#
+    return (abs(Z.real)-1j*Z.imag-3**.5-1j)*C+3**.5-1j
 
 #(Z**3+Z**2+C)#
 #(e**Z+C)#
@@ -136,7 +140,7 @@ def set_attractors(C,maxmag=5000,newton=False):
     adds it to the global variable attractors"""
     global attractors
     if newton:
-        attractors=[complex(1)-C/2,complex(-1)-C/2,C]
+        attractors=[f(f(f(f(f(f(f(f(i*(1+2j)+.001)))))))) for i in range(5)]#[complex(1,0),complex(-1,0)]#[complex(1)-C/2,complex(-1)-C/2,C]
         return
     Z=complex(0,0)
     for i in range(maxmag):
@@ -175,12 +179,12 @@ def set_function_Magnitude(find_attractor=False,f=f):
             #set_attractors(C,1500)
             if Newton:
                 set_attractors(C,15,newton=True)#for newton only!
-            while count<maxcount and attractor(Z)==None:
+            while count<maxcount and abs(Z)<100 and abs(Z-f(Z))>.00001:#attractor(Z)==None:
                 Z=f(Z,C)
                 count+=1
             if count == maxcount: 
                 return [0,-1]
-            return([count,attractor(Z)])
+            return([count,int(min([Z.real*100,1000000]))])#attractor(Z)])
         return Magnitude
     elif find_attractor=='test_fill':
         def Magnitude(Z,C,maxcount = 100):
@@ -203,13 +207,14 @@ def set_function_Magnitude(find_attractor=False,f=f):
             # return([count,attractor(Z)])
         return Magnitude
     else:
-        escape_radius=10#*100
+        escape_radius=30#*10
         half_escape=escape_radius**(2**1.5)
         def Magnitude(Z,C,maxcount = 100):
             """Counts how many iterations of f_C are needed for Z to escape or reach an attractor. 
             Returns both the number of steps taken (-1 if it didn't find an attractor or escape)
             and which attractor (which index of the global variable attractors, or -1 if it escapes, or None.)
             """
+            Z=1/(Z-0.739085)
             #C = Z
             #Z=complex(0,0)
             count = 0

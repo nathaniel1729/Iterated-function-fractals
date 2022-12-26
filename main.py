@@ -45,7 +45,7 @@ try:
     from colors import colormap_np#, set_colormap, get_color
     import function_math
     from function_math import set_function_Magnitude,Newton
-    from Mandelbrot_class import Mandelbrot
+    from camera import Camera
     from view_maps import *
 except:
     print("imports failed")
@@ -71,7 +71,7 @@ except:
 
 # In[3]:
 
-George=Mandelbrot()
+George=Camera()
 
 # set up the image and Render function
 
@@ -278,30 +278,6 @@ def zoom_in_LL():
         Run()
 
 
-def switch_M():
-    global George
-    George.switch_M()
-    btn_switch_M["text"] ="switch_J"
-    btn_switch_M["command"] =switch_J
-    Run()
-def switch_J():
-    global George
-    George.switch_J()
-    btn_switch_M["text"] ="switch_M"
-    btn_switch_M["command"] =switch_M
-    Run()
-def switch_log():
-    global George
-    George.switch_log()
-    btn_switch_log["text"] ="linear"
-    btn_switch_log["command"] =switch_linear
-    Run()
-def switch_linear():
-    global George
-    George.switch_linear()
-    btn_switch_log["text"] ="logarithmic"
-    btn_switch_log["command"] =switch_log
-    Run()
 
 
 def zoom_sequence():
@@ -417,15 +393,15 @@ btn_zoom_in_LR.grid(row=7,column=3)
 btn_zoom_in_LL = tk.Button(root,text='zoom_in_LL',width=12,height=1, command=zoom_in_LL)
 btn_zoom_in_LL.grid(row=7,column=2)
 
-######
-btn_switch_M = tk.Button(root,text='switch_J',width=12,height=1, command=switch_J)
-btn_switch_M.grid(row=8,column=2)
+# ######
+# btn_switch_M = tk.Button(root,text='switch_J',width=12,height=1, command=switch_J)
+# btn_switch_M.grid(row=8,column=2)
 
 
-btn_switch_log = tk.Button(root,text='logarithmic',width=12,height=1, command=switch_log)
-btn_switch_log.grid(row=9,column=2)
+# btn_switch_log = tk.Button(root,text='logarithmic',width=12,height=1, command=switch_log)
+# btn_switch_log.grid(row=9,column=2)
 
-######
+# ######
 
 btn_zoom_sequence = tk.Button(root,text='zoom_sequence',width=12,height=1, command=zoom_sequence)
 btn_zoom_sequence.grid(row=8,column=3)
@@ -525,7 +501,7 @@ def where(posn):
         
     else:
         return
-    zi,c0=George.view_map(decanvasify(cx,cy),George.C,George.Window)
+    zi,c0=George.fractal.view_map(decanvasify(cx,cy),George.C,George.Window)
     print(zi)
     
     exploded=False
@@ -543,7 +519,7 @@ def where(posn):
                 zi=function_math.f(zi,c0)
                 if i+1>=dot_range[0] and (i+1-dot_range[0])%dot_range[2]==0:
                     #print('ok',i)
-                    cx,cy=canvasify(George.inv_view_map(zi,George.Window))
+                    cx,cy=canvasify(George.fractal.inv_view_map(zi,George.Window))
                 else:
                     #print('too small or not divisible',i)
                     cx,cy=dots_hide
