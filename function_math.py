@@ -73,6 +73,7 @@ a_4=(6*C_0**2+2*C_0)/a_z2**3
 a_2=1
 a_dc=(4*C_0**3+6*C_0**2+2*C_0+1)*a_z2#about 161. but we're going to cheat and not use it. Ha!
 
+
 ######################################################################################################################
 ############################## most important function in the program right here #####################################
 ######################################################################################################################
@@ -80,6 +81,7 @@ a_dc=(4*C_0**3+6*C_0**2+2*C_0+1)*a_z2#about 161. but we're going to cheat and no
 def f(Z,C=0,roots=centers):#.285,.01)):#,C2 = complex(-3.0789856785439538, 0.2719380912620699)
     """the function to be iterated. Usually z^2+c, this gives the mandelbrot set. z+P_dP is newtons method."""
     #global centers
+    return(Z**2+C)
     Z=1/Z +0.739085
     Z=(Z-(np.cos(Z)-Z)/(-np.sin(Z)-1))
     return 1/(Z-0.739085)#(np.cos(Z)-Z)/(-np.sin(Z)))#(a_8*Z**8+a_6*Z**6+a_4*Z**4+Z**2+C)#(1-Z**2/2+Z**4/24-Z**6/720+C)-(C/2)**(1/3)#(Z+P_dP(Z,attractors))#or Z,roots#((Z-(Z**2))*C)#(Z**4-Z**2+C)#
@@ -214,7 +216,7 @@ def set_function_Magnitude(find_attractor=False,f=f):
             Returns both the number of steps taken (-1 if it didn't find an attractor or escape)
             and which attractor (which index of the global variable attractors, or -1 if it escapes, or None.)
             """
-            Z=1/(Z-0.739085)
+            #Z=1/(Z-0.739085)
             #C = Z
             #Z=complex(0,0)
             count = 0

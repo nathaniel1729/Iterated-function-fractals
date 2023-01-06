@@ -45,8 +45,8 @@ try:
     from colors import colormap_np#, set_colormap, get_color
     import function_math
     from function_math import set_function_Magnitude,Newton
-    from Mandelbrot_class import Mandelbrot
-    from view_maps import *
+    from Mandelbrot_class2 import Mandelbrot
+    from view_maps2 import *
 except:
     print("imports failed")
     raise
@@ -79,7 +79,7 @@ screen_img = tk.PhotoImage(width=1, height=1)
 starting=True
 def show_img(img):
     global screen_img
-    screen_img=img
+    screen_img=img.data
     label["image"] = screen_img
 
 
@@ -135,6 +135,11 @@ def get_sequence():
     sequence = [line.strip() for line in sequence]
     key.close()
     return(sequence)
+
+
+
+
+
 def display_sequence():
     global sequence_data, go
     sequence=get_sequence()
@@ -194,6 +199,11 @@ def Run():
     print('res:',George.res)
     print()
     return
+def Rerender():
+    George.Render()
+    show_img(George.img)
+    print('rerendered')
+    return
 ######
 
 ######
@@ -243,6 +253,12 @@ def C_i_up():
 def save_image():
     global George
     George.save_image()
+def save_intarray():
+    global George
+    George.save_intarray()
+def load_intarray():
+    global George
+    George.load_intarray()
 
 
 def zoom_in():
@@ -363,6 +379,8 @@ def set_dots_range():
 
 btnRun = tk.Button(root,text='Run',width=12,height=1, command=Run)
 btnRun.grid(row=0,column=2)
+btnRerender = tk.Button(root,text='Rerender',width=12,height=1, command=Rerender)
+btnRerender.grid(row=11,column=2)
 ######
 btn_res_down = tk.Button(root,text='res down',width=12,height=1, command=res_down)
 btn_res_down.grid(row=1,column=2)
@@ -394,6 +412,10 @@ btn_C_i_up.grid(row=4,column=3)
 ######
 btn_save_image = tk.Button(root,text='save image',width=12,height=1, command=save_image)
 btn_save_image.grid(row=0,column=3)
+btn_save_intarray = tk.Button(root,text='save_intarray',width=12,height=1, command=save_intarray)
+btn_save_intarray.grid(row=12,column=2)
+btn_load_intarray = tk.Button(root,text='load_intarray',width=12,height=1, command=load_intarray)
+btn_load_intarray.grid(row=13,column=2)
 
 
 
@@ -452,12 +474,12 @@ btn_change_variables.grid(row=10,column=2)
 
 # working out some kinks and creating the main image and trailing dots. And spot zooming.
 
-label=tk.Label(root, image=George.img)
+label=tk.Label(root, image=tk.PhotoImage(width=1, height=1))
 label.grid(row=0,column=1,rowspan = 120)
 #canvas = tk.Canvas(root, width=500, height=400, background='gray75')
 canvas = tk.Canvas(label, width=500, height=400, background='gray75')
-label_id=canvas.create_image(0, 0, image=George.img)#photo, anchor="nw")#Label(root, image=img)
-canvas.itemconfigure(label_id, image=George.img)
+label_id=canvas.create_image(0, 0, image=tk.PhotoImage(width=1, height=1))#photo, anchor="nw")#Label(root, image=img)
+canvas.itemconfigure(label_id, image=tk.PhotoImage(width=1, height=1))
 #####################################
 def changetip(a,clickType):            
     """activate or deactivate whatever was clicked"""
