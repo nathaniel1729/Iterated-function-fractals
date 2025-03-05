@@ -43,13 +43,13 @@ def canvasify(Z):
 
 
 def view_C_lin(point,Q):
-    return np.transpose(np.array([np.zeros_like(point,dtype=np.complex),point]),(1,2,0))
+    return np.transpose(np.array([np.zeros_like(point,dtype=complex),point]),(1,2,0))
 def inv_view_C_lin(C,Q):
     return C
 
 
 def view_J_lin(point,Q):
-    return np.transpose(np.array([point,np.zeros_like(point,dtype=np.complex)+Q]),(1,2,0))
+    return np.transpose(np.array([point,np.zeros_like(point,dtype=complex)+Q]),(1,2,0))
 def inv_view_J_lin(C,Q):
     return C
 
@@ -68,7 +68,7 @@ def complex_log(x):
 def view_C_log_2(point,Q):
     lnC = point
     C=Q[1]+exp(lnC)
-    return np.transpose(np.array([np.zeros_like(point,dtype=np.complex),C]),(1,2,0))
+    return np.transpose(np.array([np.zeros_like(point,dtype=complex),C]),(1,2,0))
 def inv_view_C_log_2(C,Q):
     lnC = complex_log(C-Q[1])
     point=lnC
@@ -77,7 +77,7 @@ def inv_view_C_log_2(C,Q):
 def view_J_log_2(point,Q):
     lnC = point
     C=Q[0]+exp(lnC)
-    return np.transpose(np.array([C,np.zeros_like(point,dtype=np.complex)+Q[1]]),(1,2,0))
+    return np.transpose(np.array([C,np.zeros_like(point,dtype=complex)+Q[1]]),(1,2,0))
 def inv_view_J_log_2(C,Q):
     lnC = complex_log(C-Q[0])
     point=lnC
